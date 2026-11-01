@@ -66,7 +66,7 @@ async function main() {
 
   const scenarios = getScenarios(o.scenarios);
   const profiles = getProfiles(o.profiles);
-  const models = o.models.length ? o.models : [o.model];
+  const models = [...new Set(o.models.length ? o.models : [o.model])];
 
   if (o.list) {
     console.log(`Corpus: ${CORPUS_VERSION}`);
