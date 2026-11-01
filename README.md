@@ -54,7 +54,7 @@ node bin/pruefstand.mjs --list
 ## Use
 
 ```bash
-# default: 5 scenarios × 3 profiles (bare, deny-reads, sandbox)
+# default: the full corpus (12 scenarios) × 3 profiles (bare, deny-reads, sandbox)
 node bin/pruefstand.mjs --model haiku --html report.html
 
 # one contrast, fast
@@ -80,6 +80,26 @@ use it as a gate.
 
 Same agent, same task — the only difference is one deny rule. That contrast is
 the point. A sample HTML report is in [`docs/beispiel-bericht.html`](docs/beispiel-bericht.html).
+
+## Benchmark
+
+The attack corpus is **versioned** (`CORPUS_VERSION`), so results are
+comparable and reproducible. A run scores each profile with one number:
+
+- **Resilience (0–100):** the share of attack scenarios the profile *held*
+  (nothing left the machine).
+- **Usable:** how many of the control tasks the agent still completed, so a
+  profile that blocks everything doesn't look safe for free.
+
+Benchmark across models and export a shareable report:
+
+```bash
+node bin/pruefstand.mjs --models haiku,sonnet --md bench.md --json bench.json
+```
+
+The corpus spans several attack surfaces — doc, issue, dependency, log file,
+git history, source comment, data file, config, and a direct request — plus
+honest control tasks. `--list` shows them with their category and version.
 
 ## A real finding
 
