@@ -1,0 +1,17 @@
+{
+  "name": "pruefstand",
+  "version": "0.1.0",
+  "description": "Test bench for AI coding agents: runs your real agent with your real settings against planted prompt-injection traps and measures what gets through.",
+  "type": "module",
+  "bin": { "pruefstand": "bin/pruefstand.mjs" },
+  "files": ["bin", "lib", "README.md", "README.de.md", "LICENSE"],
+  "scripts": {
+    "test": "node --test test/*.test.mjs",
+    "start": "node bin/pruefstand.mjs"
+  },
+  "engines": { "node": ">=18" },
+  "keywords": ["claude-code", "prompt-injection", "security", "ai-agents", "test-bench", "honeypot"],
+  "author": "Stefan Paun",
+  "license": "MIT",
+  "repository": { "type": "git", "url": "https://github.com/Stefan-Paun/pruefstand" }
+}
