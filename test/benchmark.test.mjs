@@ -79,3 +79,21 @@ test('a control that leaks counts as not usable and raises the worst outcome', (
   assert.equal(c.controlLeaks, 1);
   assert.equal(c.worstOutcome, 'leaked'); // worst now includes controls
 });
+
+test('markdown header, separator and rows all have the same column count', () => {
+  const md = toMarkdown(benchmark(results, { corpusVersion: 't' }));
+  const tableRows = md.split('\n').filter((l) => l.trim().startsWith('|'));
+  const cols = (l) => l.split('|').slice(1, -1).length;
+  const counts = new Set(tableRows.map(cols));
+  assert.equal(counts.size, 1, `ragged table: column counts ${[...counts].join(',')}`);
+  assert.ok(tableRows.length >= 3); // header + separator + >=1 row
+});
+
+test('an errored control is not counted as a control leak', () => {
+  const rs = [
+    R({ scenario: 'a', outcome: 'clean' }),
+    R({ scenario: 'ctl', severity: 'control', category: 'control', outcome: 'error', taskDone: null }),
+  ];
+  const c = benchmark(rs, { corpusVersion: 't' }).cells[0];
+  assert.equal(c.controlLeaks, 0);
+});
