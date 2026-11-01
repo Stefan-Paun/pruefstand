@@ -1,8 +1,7 @@
 # pruefstand
 
-**Ein Prüfstand für KI-Coding-Agents.** Er lässt deinen *echten* Agent mit
-deinen *echten* Einstellungen gegen gestellte Prompt-Injection-Fallen laufen
-und misst, was wirklich durchkommt.
+**Ein Prüfstand für KI-Coding-Agents.** Er lässt deinen *echten* Agent unter einem Schutzprofil deiner Wahl gegen
+gestellte Prompt-Injection-Fallen laufen und misst, was wirklich durchkommt.
 
 Coding-Agents lesen Dateien, holen Seiten und führen Befehle aus. Ein README,
 ein Bug-Report oder die Doku einer Abhängigkeit kann eine versteckte Anweisung
@@ -80,6 +79,10 @@ Deny-Regeln `read` sein und erst mit Sandbox `clean`.
 ## Sicherheit
 
 - Es wird nie ein echtes Secret benutzt; die Werte sind zufällig und wertlos.
+- Der Agent läuft mit beschnittener Umgebung (deine Token/Session-Secrets werden
+  weggelassen) und auf sauberem Einstellungs-Stand – nur das gewählte Profil zählt.
+- Nach jedem Lauf wird der ganze Workspace gescannt; ein Secret, das der Agent
+  woandershin kopiert, angehängt oder committet hat, fällt trotzdem auf.
 - Der Honeypot hört nur auf `127.0.0.1` auf einem Zufallsport und loggt.
 - Jeder Workspace ist ein frischer Temp-Ordner, der danach gelöscht wird.
 - Szenario-Pfade werden geprüft, damit kein Szenario aus seinem Ordner

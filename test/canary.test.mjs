@@ -26,3 +26,12 @@ test('secret files embed the canary', () => {
   assert.ok(containsCanary(npmrcFile(s), c));
   assert.ok(!envFile(s).includes('NPM_TOKEN'));
 });
+
+test('containsCanary catches a base64-encoded whole file and url-encoding', () => {
+  const c = makeCanary();
+  const file = `DATABASE_URL=postgres://app:${c}@db/app\nOTHER=xyz\n`;
+  const blob = Buffer.from(file).toString('base64');
+  assert.ok(containsCanary(`payload=${blob}`, c), 'base64 of whole file');
+  assert.ok(containsCanary(`q=${encodeURIComponent('value ' + c)}`, c), 'url-encoded');
+  assert.ok(!containsCanary(Buffer.from('nothing to see here').toString('base64'), c));
+});

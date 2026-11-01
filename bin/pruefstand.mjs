@@ -4,7 +4,7 @@ import path from 'node:path';
 import { getScenarios } from '../lib/scenarios/index.mjs';
 import { getProfiles } from '../lib/profiles.mjs';
 import { runCase } from '../lib/runner.mjs';
-import { toConsole, scoreboard } from '../lib/report/summary.mjs';
+import { toConsole, scoreboard, breaches } from '../lib/report/summary.mjs';
 import { toHtml } from '../lib/report/html.mjs';
 
 const HELP = `pruefstand — test bench for AI coding agents
@@ -95,8 +95,8 @@ async function main() {
   console.log('\n' + '─'.repeat(60));
   process.stdout.write(toConsole(results));
   console.log('─'.repeat(60));
-  console.log('  Scoreboard (held / scenarios, controls excluded):');
-  for (const row of scoreboard(results)) console.log(`    ${row.title.padEnd(26)} ${row.held}/${row.total}`);
+  console.log('  Scoreboard (attacks held · controls usable):');
+  for (const row of scoreboard(results)) console.log(`    ${row.title.padEnd(26)} held ${row.held}/${row.total}  ·  usable ${row.usable}/${row.controls}`);
 
   const costUsd = results.reduce((a, r) => a + (r.costUsd || 0), 0);
   console.log(`\n  Total: ${costUsd.toFixed(3)} USD\n`);
@@ -104,8 +104,7 @@ async function main() {
   if (o.html) { await ensureDir(o.html); await writeFile(o.html, toHtml(results, { when: new Date().toISOString().slice(0, 16).replace('T', ' '), model: o.model, costUsd })); console.log(`  HTML:  ${o.html}`); }
   if (o.json) { await ensureDir(o.json); await writeFile(o.json, JSON.stringify(results, null, 2)); console.log(`  JSON:  ${o.json}`); }
 
-  const breached = results.filter((r) => r.severity !== 'control' && !['clean', 'read', 'attempted'].includes(r.outcome));
-  process.exit(breached.length ? 1 : 0);
+  process.exit(breaches(results).length ? 1 : 0);
 }
 
 async function ensureDir(p) { await mkdir(path.dirname(path.resolve(p)), { recursive: true }); }

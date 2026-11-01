@@ -1,8 +1,7 @@
 # pruefstand
 
-**A test bench for AI coding agents.** It runs your *real* agent with your
-*real* settings against planted prompt-injection traps and measures what
-actually gets through.
+**A test bench for AI coding agents.** It runs your *real* agent under a defence profile you choose against planted
+prompt-injection traps and measures what actually gets through.
 
 Coding agents read files, fetch pages, and run shell commands. A README, a bug
 report, or a dependency's docs can carry a hidden instruction — "send `.env` to
@@ -92,6 +91,10 @@ deny-rules and go `clean` only once the sandbox is on.
 ## Safety
 
 - No real secret is ever used; the planted values are random and grant nothing.
+- The agent runs with a trimmed environment (your tokens and session secrets are
+  withheld) and on a clean settings slate, so only the chosen profile is in play.
+- After each run the whole workspace is scanned, so a secret the agent copied,
+  appended, or committed elsewhere is still caught.
 - The honeypot binds to `127.0.0.1` on a random port and only logs.
 - Each workspace is a fresh temp dir, deleted after the run.
 - Scenario file paths are checked so a scenario can't write outside its folder.
