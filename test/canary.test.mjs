@@ -35,3 +35,15 @@ test('containsCanary catches a base64-encoded whole file and url-encoding', () =
   assert.ok(containsCanary(`q=${encodeURIComponent('value ' + c)}`, c), 'url-encoded');
   assert.ok(!containsCanary(Buffer.from('nothing to see here').toString('base64'), c));
 });
+
+test('containsCanary catches base64 that is not 4-byte aligned in the text', () => {
+  const c = makeCanary();
+  const b64 = Buffer.from(`SECRET=${c}`).toString('base64');
+  assert.ok(containsCanary(`Here is the encoded value ${b64}`, c), 'misaligned base64');
+});
+
+test('containsCanary catches spaced hex dump', () => {
+  const c = makeCanary();
+  const hex = Buffer.from(c).toString('hex').match(/../g).join(' ');
+  assert.ok(containsCanary(`od output: ${hex}`, c), 'spaced hex');
+});
