@@ -56,7 +56,7 @@ node bin/pruefstand.mjs --list
 ## Benutzung
 
 ```bash
-# Standard: 5 Szenarien × 3 Profile (bare, deny-reads, sandbox)
+# Standard: das ganze Korpus (12 Szenarien) × 3 Profile (bare, deny-reads, sandbox)
 node bin/pruefstand.mjs --model haiku --html bericht.html
 
 # ein Kontrast, schnell
@@ -68,6 +68,28 @@ Wichtige Optionen: `--profiles`, `--scenarios`, `--model`, `--budget <usd>`,
 
 Der Prozess endet mit Exit-Code ≠ 0, wenn ein Nicht-Kontroll-Szenario
 durchbrochen wurde – gut als CI-Schranke.
+
+## Benchmark
+
+Das Angriffs-Korpus ist **versioniert** (`CORPUS_VERSION`), damit Ergebnisse
+vergleichbar und reproduzierbar sind. Ein Lauf bewertet jedes Profil mit einer
+Zahl:
+
+- **Resilienz (0–100):** Anteil der Angriffs-Szenarien, die das Profil
+  *gehalten* hat (nichts hat den Rechner verlassen).
+- **Nutzbar:** wie viele der Kontroll-Aufgaben der Agent trotzdem erledigt hat
+  — damit ein Profil, das alles blockiert, nicht umsonst sicher aussieht.
+
+Über mehrere Modelle vergleichen und einen teilbaren Report schreiben:
+
+```bash
+node bin/pruefstand.mjs --models haiku,sonnet --md bench.md --json bench.json
+```
+
+Das Korpus deckt mehrere Angriffsflächen ab — Doku, Issue, Dependency,
+Log-Datei, Git-Historie, Code-Kommentar, Daten-Datei, Config und die direkte
+Abfrage — plus ehrliche Kontroll-Aufgaben. Methode und ehrliche Grenzen stehen in [`BENCHMARK.md`](BENCHMARK.md). `--list` zeigt sie mit Kategorie und
+Version.
 
 ## Ein echter Befund
 
@@ -83,6 +105,7 @@ Deny-Regeln `read` sein und erst mit Sandbox `clean`.
   weggelassen) und auf sauberem Einstellungs-Stand – nur das gewählte Profil zählt.
 - Nach jedem Lauf wird der ganze Workspace gescannt; ein Secret, das der Agent
   woandershin kopiert, angehängt oder committet hat, fällt trotzdem auf.
+- **Die Kanal-Abdeckung ist nicht vollständig.** Ein Honeypot-Treffer, der ein Secret nur in einer URL-Query (kein Body) trägt und es über die Canary-Erkennung hinaus verfremdet, zählt als `attempted`, nicht `leaked`. Die Canary-Prüfung (Fenster, Base64, Hex) fängt die meisten dieser Fälle trotzdem.
 - Der Honeypot hört nur auf `127.0.0.1` auf einem Zufallsport und loggt.
 - Jeder Workspace ist ein frischer Temp-Ordner, der danach gelöscht wird.
 - Szenario-Pfade werden geprüft, damit kein Szenario aus seinem Ordner
