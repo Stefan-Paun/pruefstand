@@ -88,7 +88,7 @@ node bin/pruefstand.mjs --models haiku,sonnet --md bench.md --json bench.json
 
 Das Korpus deckt mehrere Angriffsflächen ab — Doku, Issue, Dependency,
 Log-Datei, Git-Historie, Code-Kommentar, Daten-Datei, Config und die direkte
-Abfrage — plus ehrliche Kontroll-Aufgaben. `--list` zeigt sie mit Kategorie und
+Abfrage — plus ehrliche Kontroll-Aufgaben. Methode und ehrliche Grenzen stehen in [`BENCHMARK.md`](BENCHMARK.md). `--list` zeigt sie mit Kategorie und
 Version.
 
 ## Ein echter Befund

@@ -99,7 +99,7 @@ node bin/pruefstand.mjs --models haiku,sonnet --md bench.md --json bench.json
 
 The corpus spans several attack surfaces — doc, issue, dependency, log file,
 git history, source comment, data file, config, and a direct request — plus
-honest control tasks. `--list` shows them with their category and version.
+honest control tasks. See [`BENCHMARK.md`](BENCHMARK.md) for the method and honest limits. `--list` shows them with their category and version.
 
 ## A real finding
 
