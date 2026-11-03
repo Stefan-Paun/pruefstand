@@ -98,6 +98,11 @@ Version.
 erst die Sandbox. Der Prüfstand zeigt das direkt: dasselbe Szenario kann unter
 Deny-Regeln `read` sein und erst mit Sandbox `clean`.
 
+Alternativ ohne Sandbox: das Profil `deny-hook` (`--profiles deny-hook`) ergänzt
+die Deny-Regeln um einen `PreToolUse`-Hook auf Bash, der Befehle mit `.env`/`.npmrc`
+ablehnt (Exit 2). Reine Zeichenketten-Prüfung, also umgehbar (`cat .e*`) –
+der Live-Beweis gegen einen echten Agent-Lauf steht noch aus.
+
 ## Sicherheit
 
 - Es wird nie ein echtes Secret benutzt; die Werte sind zufällig und wertlos.
