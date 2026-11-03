@@ -110,7 +110,7 @@ deny-rules and go `clean` only once the sandbox is on.
 
 Without the sandbox: the `deny-hook` profile (`--profiles deny-hook`) adds a
 `PreToolUse` hook on Bash that rejects commands mentioning `.env`/`.npmrc`
-(exit 2). It is a plain string match, so it can be bypassed (`cat .e*`); the
+(exit 2). It is a plain string match, so it can be bypassed (`cat .e*`); it also over-blocks e.g. `process.env`; the
 live proof against a real agent run is still pending.
 
 ## Safety

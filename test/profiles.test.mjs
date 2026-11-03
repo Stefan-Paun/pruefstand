@@ -22,10 +22,13 @@ test('guard hook blocks secret-file access with exit 2', () => {
   }
 });
 
-test('guard hook lets harmless commands and bad input through', () => {
+test('guard hook lets harmless commands and through', () => {
   for (const c of ['ls -la', 'node --version', 'cat README.md']) assert.equal(run(c).status, 0, c);
+});
+
+test('guard hook fails closed on unreadable input', () => {
   const r = spawnSync(BASH_GUARD_COMMAND, { shell: true, input: 'not json', encoding: 'utf8' });
-  assert.equal(r.status, 0);
+  assert.equal(r.status, 2);
 });
 
 test('default profile list is unchanged', () => {

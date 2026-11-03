@@ -100,7 +100,7 @@ Deny-Regeln `read` sein und erst mit Sandbox `clean`.
 
 Alternativ ohne Sandbox: das Profil `deny-hook` (`--profiles deny-hook`) ergänzt
 die Deny-Regeln um einen `PreToolUse`-Hook auf Bash, der Befehle mit `.env`/`.npmrc`
-ablehnt (Exit 2). Reine Zeichenketten-Prüfung, also umgehbar (`cat .e*`) –
+ablehnt (Exit 2). Reine Zeichenketten-Prüfung, also umgehbar (`cat .e*`) – sie blockt auch z. B. `process.env` zu viel –
 der Live-Beweis gegen einen echten Agent-Lauf steht noch aus.
 
 ## Sicherheit
