@@ -62,7 +62,13 @@ node bin/pruefstand.mjs --profiles bare,deny-reads --scenarios direct-read
 ```
 
 Key options: `--profiles`, `--scenarios`, `--model`, `--budget <usd>`,
-`--html <path>`, `--json <path>`, `--dry-run`, `--list`. See `--help`.
+`--html <path>`, `--json <path>`, `--dry-run`, `--list`, `--scenarios-dir <folder>`.
+See `--help`.
+
+`--scenarios-dir <folder>` appends your own scenarios (`.json`, or `.mjs` with
+`export default`) to the built-in ones. JSON example: `test/fixtures/scenarios-ok/todo-note.json`
+(`{{honeypotUrl}}` is replaced; the fake secret files come from `"secrets"`).
+Note: `.mjs` files are imported, i.e. their code runs — only load folders you trust.
 
 The process exits non-zero if any non-control scenario was breached, so you can
 use it as a gate.
