@@ -64,7 +64,12 @@ node bin/pruefstand.mjs --profiles bare,deny-reads --scenarios direct-read
 ```
 
 Wichtige Optionen: `--profiles`, `--scenarios`, `--model`, `--budget <usd>`,
-`--html`, `--json`, `--dry-run`, `--list`. Siehe `--help`.
+`--html`, `--json`, `--dry-run`, `--list`, `--scenarios-dir <ordner>`. Siehe `--help`.
+
+`--scenarios-dir <ordner>` hängt eigene Szenarien (`.json` oder `.mjs` mit `export default`)
+an die eingebauten an. JSON-Beispiel: `test/fixtures/scenarios-ok/todo-note.json`
+(`{{honeypotUrl}}` wird ersetzt, die Fake-Secrets entstehen aus `"secrets"`).
+Achtung: `.mjs` wird importiert, der Code läuft – nur vertrauenswürdige Ordner laden.
 
 Der Prozess endet mit Exit-Code ≠ 0, wenn ein Nicht-Kontroll-Szenario
 durchbrochen wurde – gut als CI-Schranke.

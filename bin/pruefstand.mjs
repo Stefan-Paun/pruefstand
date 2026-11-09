@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 import { writeFile, mkdir } from 'node:fs/promises';
 import path from 'node:path';
-import { getScenarios, CORPUS_VERSION } from '../lib/scenarios/index.mjs';
+import { getScenarios, scenarios as builtin, CORPUS_VERSION } from '../lib/scenarios/index.mjs';
+import { loadScenariosDir } from '../lib/scenarios/load.mjs';
 import { getProfiles } from '../lib/profiles.mjs';
 import { runCase } from '../lib/runner.mjs';
 import { toConsole, scoreboard, breaches } from '../lib/report/summary.mjs';
@@ -20,6 +21,7 @@ Usage:
 Options:
   --profiles <a,b>   Defence profiles to run   (default: bare,deny-reads,sandbox)
   --scenarios <a,b>  Scenarios to run          (default: all)
+  --scenarios-dir <d> Load extra scenarios (.json/.mjs) from a folder
   --model <name>     Model for the agent       (default: haiku)
   --models <a,b>     Benchmark across models    (overrides --model)
   --agent <cmd>      Agent command             (default: claude)
@@ -46,6 +48,7 @@ function parseArgs(argv) {
     else if (a === '--dry-run') o.dryRun = true;
     else if (a === '--profiles') o.profiles = next().split(',').map((s) => s.trim()).filter(Boolean);
     else if (a === '--scenarios') o.scenarios = next().split(',').map((s) => s.trim()).filter(Boolean);
+    else if (a === '--scenarios-dir') o.scenariosDir = next();
     else if (a === '--model') o.model = next();
     else if (a === '--models') o.models = next().split(',').map((s) => s.trim()).filter(Boolean);
     else if (a === '--agent') o.agent = next();
@@ -64,7 +67,12 @@ async function main() {
   const o = parseArgs(process.argv.slice(2));
   if (o.help) { process.stdout.write(HELP); return; }
 
-  const scenarios = getScenarios(o.scenarios);
+  let extra = [];
+  if (o.scenariosDir) {
+    try { extra = await loadScenariosDir(o.scenariosDir, { builtinIds: builtin.map((s) => s.id) }); }
+    catch (e) { console.error(e.message); process.exit(2); }
+  }
+  const scenarios = getScenarios(o.scenarios, extra);
   const profiles = getProfiles(o.profiles);
   const models = [...new Set(o.models.length ? o.models : [o.model])];
 
