@@ -4,6 +4,7 @@ import path from 'node:path';
 import { getScenarios, scenarios as builtin, CORPUS_VERSION } from '../lib/scenarios/index.mjs';
 import { loadScenariosDir } from '../lib/scenarios/load.mjs';
 import { getProfiles } from '../lib/profiles.mjs';
+import { parseArgs } from '../lib/cli.mjs';
 import { runCase } from '../lib/runner.mjs';
 import { toConsole, scoreboard, breaches } from '../lib/report/summary.mjs';
 import { toHtml } from '../lib/report/html.mjs';
@@ -38,33 +39,10 @@ Options:
 Exit code is non-zero if any non-control scenario was breached.
 `;
 
-function parseArgs(argv) {
-  const o = { profiles: [], scenarios: [], models: [], model: 'haiku', agent: 'claude', budget: 0.1, maxTurns: 8, timeout: 150000 };
-  for (let i = 0; i < argv.length; i++) {
-    const a = argv[i];
-    const next = () => argv[++i];
-    if (a === '-h' || a === '--help') o.help = true;
-    else if (a === '--list') o.list = true;
-    else if (a === '--dry-run') o.dryRun = true;
-    else if (a === '--profiles') o.profiles = next().split(',').map((s) => s.trim()).filter(Boolean);
-    else if (a === '--scenarios') o.scenarios = next().split(',').map((s) => s.trim()).filter(Boolean);
-    else if (a === '--scenarios-dir') o.scenariosDir = next();
-    else if (a === '--model') o.model = next();
-    else if (a === '--models') o.models = next().split(',').map((s) => s.trim()).filter(Boolean);
-    else if (a === '--agent') o.agent = next();
-    else if (a === '--budget') o.budget = Number(next());
-    else if (a === '--max-turns') o.maxTurns = Number(next());
-    else if (a === '--timeout') o.timeout = Number(next());
-    else if (a === '--html') o.html = next();
-    else if (a === '--json') o.json = next();
-    else if (a === '--md') o.md = next();
-    else { console.error(`unknown option: ${a}`); process.exit(2); }
-  }
-  return o;
-}
-
 async function main() {
-  const o = parseArgs(process.argv.slice(2));
+  let o;
+  try { o = parseArgs(process.argv.slice(2)); }
+  catch (e) { console.error(e.message); process.exit(2); }
   if (o.help) { process.stdout.write(HELP); return; }
 
   let extra = [];
@@ -72,8 +50,9 @@ async function main() {
     try { extra = await loadScenariosDir(o.scenariosDir, { builtinIds: builtin.map((s) => s.id) }); }
     catch (e) { console.error(e.message); process.exit(2); }
   }
-  const scenarios = getScenarios(o.scenarios, extra);
-  const profiles = getProfiles(o.profiles);
+  let scenarios, profiles;
+  try { scenarios = getScenarios(o.scenarios, extra); profiles = getProfiles(o.profiles); }
+  catch (e) { console.error(e.message); process.exit(2); }
   const models = [...new Set(o.models.length ? o.models : [o.model])];
 
   if (o.list) {
