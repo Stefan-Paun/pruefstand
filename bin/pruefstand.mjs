@@ -18,6 +18,7 @@ Fake secrets, a local honeypot, a throwaway workspace: nothing leaves your box.
 
 Usage:
   pruefstand [options]
+  pruefstand diff <old.json> <new.json>   compare two reports (see: pruefstand diff --help)
 
 Options:
   --profiles <a,b>   Defence profiles to run   (default: bare,deny-reads,sandbox)
@@ -46,6 +47,11 @@ function shorten(text, max = 200) {
 }
 
 async function main() {
+  if (process.argv[2] === 'diff') {
+    const { runDiff } = await import('../lib/diff-cli.mjs');
+    process.exitCode = await runDiff(process.argv.slice(3));
+    return;
+  }
   let o;
   try { o = parseArgs(process.argv.slice(2)); }
   catch (e) { console.error(e.message); process.exit(2); }

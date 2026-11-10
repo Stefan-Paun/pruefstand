@@ -100,6 +100,21 @@ Log-Datei, Git-Historie, Code-Kommentar, Daten-Datei, Config und die direkte
 Abfrage — plus ehrliche Kontroll-Aufgaben. Methode und ehrliche Grenzen stehen in [`BENCHMARK.md`](BENCHMARK.md). `--list` zeigt sie mit Kategorie und
 Version.
 
+## Zwei Berichte vergleichen (`diff`)
+
+```bash
+node bin/pruefstand.mjs diff alt.json neu.json [--format text|md|json] [--fail-on rueckschritt|nichts] [--profil <name>]
+```
+
+Ordnet jede Zelle (Szenario + Profil) als Rückschritt, Verbesserung, unverändert,
+neu oder entfallen ein und fasst je Profil die Quote vorher/nachher zusammen.
+Bei mehreren Läufen je Zelle zählt eine Änderung nur, wenn sie größer als zwei
+Standardfehler ist; bei Einzelmessungen warnt das Tool, dass es Zufall sein kann.
+Andere Korpus-Version, anderes Schema/Modell oder andere Szenarienmenge werden als
+Warnung gemeldet (verglichen wird die Schnittmenge). Exit-Code: `0` keine
+Rückschritte, `1` Rückschritte, `2` Fehler bei Eingabe/Format. Details im
+englischen README; Workflow-Beispiel: `examples/diff-workflow.yml`.
+
 ## Ein echter Befund
 
 `permissions.deny` auf `Read(.env)` stoppt das **Read-Werkzeug**, aber eine

@@ -111,6 +111,34 @@ The corpus spans several attack surfaces — doc, issue, dependency, log file,
 git history, source comment, data file, config, and a direct request — plus
 honest control tasks. See [`BENCHMARK.md`](BENCHMARK.md) for the method and honest limits. `--list` shows them with their category and version.
 
+## Compare two reports (`diff`)
+
+After changing your setup (new model, new hook, new version) you want to know
+whether protection got worse. Compare two `--json` reports:
+
+```bash
+node bin/pruefstand.mjs diff old.json new.json [--format text|md|json] [--fail-on rueckschritt|nichts] [--profil <name>]
+```
+
+- Cells are matched on scenario id + profile and sorted into **Rückschritt**
+  (held before, breached now), **Verbesserung**, **unverändert**, **neu** and
+  **entfallen**; a per-profile summary shows the held-rate before/after and the
+  difference.
+- **Noise rule:** several runs per cell are pooled (error runs are ignored). A
+  change counts only if the difference in held-rate is larger than two standard
+  errors; otherwise the cell stays "unverändert". With single runs the report
+  warns explicitly that a difference can be chance.
+- **Comparability:** a different corpus version, schema, model or scenario set
+  is reported as a warning; only cells present in both reports are compared.
+- **Exit codes:** `0` no regressions (or `--fail-on nichts`), `1` regressions,
+  `2` error in input, format or options.
+- Text output uses colour only on a TTY and without `NO_COLOR`; `--format md`
+  escapes report text for PR comments. Inputs are validated strictly (size limit
+  20 MB, types, known outcomes). It never posts anything itself.
+
+A workflow snippet (documentation only) is in
+[`examples/diff-workflow.yml`](examples/diff-workflow.yml).
+
 ## A real finding
 
 `permissions.deny` on `Read(.env)` stops the **Read tool**, but a `deny` rule

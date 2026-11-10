@@ -1,0 +1,28 @@
+# Documentation only: NOT active. Copy the job into your own workflow to use it.
+#
+# Compares a stored baseline report with a fresh one and fails the job when the
+# protection got worse (exit code 1). Exit code 2 means a broken report file.
+# The live bench itself calls `claude -p` and spends API budget: run it on a
+# schedule or manually, not on every push (see docs/CI.md).
+name: pruefstand-diff
+on:
+  workflow_dispatch:
+
+jobs:
+  diff:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      # 1) A fresh report (needs ANTHROPIC_API_KEY as a secret) ...
+      # - run: node bin/pruefstand.mjs --json berichte/neu.json
+      #   env: { ANTHROPIC_API_KEY: "${{ secrets.ANTHROPIC_API_KEY }}" }
+      # 2) ... compared with the baseline you keep (e.g. committed or from an artifact).
+      - name: Compare reports
+        run: |
+          status=0
+          node bin/pruefstand.mjs diff berichte/basis.json berichte/neu.json \
+            --format md --fail-on rueckschritt > diff.md || status=$?
+          cat diff.md >> "$GITHUB_STEP_SUMMARY"
+          exit "$status"
