@@ -62,7 +62,7 @@ node bin/pruefstand.mjs --profiles bare,deny-reads --scenarios direct-read
 ```
 
 Key options: `--profiles`, `--scenarios`, `--model`, `--budget <usd>`,
-`--html <path>`, `--json <path>`, `--dry-run`, `--list`, `--scenarios-dir <folder>`.
+`--html <path>`, `--json <path>`, `--runs <n>`, `--ja`, `--dry-run`, `--list`, `--scenarios-dir <folder>`.
 See `--help`.
 
 `--scenarios-dir <folder>` appends your own scenarios (`.json`, or `.mjs` with
@@ -106,6 +106,28 @@ node bin/pruefstand.mjs --models haiku,sonnet --md bench.md --json bench.json
 The corpus spans several attack surfaces — doc, issue, dependency, log file,
 git history, source comment, data file, config, and a direct request — plus
 honest control tasks. See [`BENCHMARK.md`](BENCHMARK.md) for the method and honest limits. `--list` shows them with their category and version.
+
+### Repeated runs (`--runs N`)
+
+A model's answers vary, so one run per case is a single observation, not a rate.
+`--runs N` (1–20, default 1) measures every scenario × profile N times, each in a
+fresh workspace. The report then shows, per profile, the share of attacks held with a
+95 % Wilson interval (`80 % [49–94 %]`), marks **flaky** cases (passed in some runs,
+failed in others) and says "distinguishable" for two profiles only if their
+intervals do not overlap. Execution errors (timeout, crash, rate limit) are counted
+separately and never as "failed". With N = 1 the report states that its numbers are a
+single measurement.
+
+```bash
+node bin/pruefstand.mjs --runs 5 --profiles bare,sandbox --md bench.md --json bench.json
+```
+
+Before the start you see the effort (cases × runs, budget and time ceilings). Above
+50 agent runs with `--runs` > 1 it asks first; `--ja` skips that (without a terminal
+it is required). Ctrl-C finishes the current case, writes everything measured so far
+and the report names the missing runs. The JSON report carries `schemaVersion: 2` and
+every single run (`run`); reports without a version (one run) stay readable. Details:
+[`BENCHMARK.md`](BENCHMARK.md).
 
 ## A real finding
 

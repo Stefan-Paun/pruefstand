@@ -37,4 +37,14 @@ Verhalten wie bisher.
 
 ## Stand
 
-(wird am Ende aktualisiert)
+Alle sechs Etappen sind umgesetzt und committet; `npm test` grün.
+Getestet nur mit Attrappen-Agenten (kein Aufruf von `claude`): Statistik gegen
+bekannte Werte, Zählung/Einstufung, altes Berichtsformat (`test/fixtures/report-v1.json`),
+Abbruch (Teilergebnisse + fehlende Läufe), Fehler getrennt, CLI mit Skript als Agent.
+
+Entscheidungen: Läufe als äußere Schleife (bei Abbruch sind alle Zellen etwa gleich
+oft gemessen); Nachfrage nur bei `--runs` > 1 und > 50 Agentenläufen (`--runs 1`
+verhält sich wie bisher); ohne Terminal und ohne `--ja` Abbruch mit Exit 2; Abbruch
+per Strg-C endet mit Exit 130 (oder 1 bei Durchbruch); `--dry-run` baut nur einen
+Durchgang; eine einzelne Messung heißt „single“, nie „stabil“.
+Offen: keine echte Messung mit `--runs` gegen `claude` gelaufen.
