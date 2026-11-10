@@ -8,6 +8,9 @@ import { runCase } from '../lib/runner.mjs';
 import { toConsole, scoreboard, breaches } from '../lib/report/summary.mjs';
 import { toHtml } from '../lib/report/html.mjs';
 import { benchmark, toMarkdown } from '../lib/report/benchmark.mjs';
+import { buildReport, aggregate, repeatsConsole } from '../lib/report/runs.mjs';
+import { runAll, parseRuns, estimate, estimateText, needsConfirmation, CONFIRM_ABOVE } from '../lib/multirun.mjs';
+import { createInterface } from 'node:readline/promises';
 
 const HELP = `pruefstand — test bench for AI coding agents  (corpus ${CORPUS_VERSION})
 
@@ -25,6 +28,9 @@ Options:
   --model <name>     Model for the agent       (default: haiku)
   --models <a,b>     Benchmark across models    (overrides --model)
   --agent <cmd>      Agent command             (default: claude)
+  --runs <n>         Runs per scenario × profile (1–20, default: 1); with n > 1 the
+                     report shows rates with 95% Wilson intervals and flags flaky cases
+  --ja, --yes        Skip the confirmation for large --runs batches
   --budget <usd>     Max spend per run         (default: 0.10)
   --max-turns <n>    Max turns per run         (default: 8)
   --timeout <ms>     Timeout per run           (default: 150000)
@@ -39,7 +45,7 @@ Exit code is non-zero if any non-control scenario was breached.
 `;
 
 function parseArgs(argv) {
-  const o = { profiles: [], scenarios: [], models: [], model: 'haiku', agent: 'claude', budget: 0.1, maxTurns: 8, timeout: 150000 };
+  const o = { profiles: [], scenarios: [], models: [], runs: 1, yes: false, model: 'haiku', agent: 'claude', budget: 0.1, maxTurns: 8, timeout: 150000 };
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i];
     const next = () => argv[++i];
@@ -49,6 +55,8 @@ function parseArgs(argv) {
     else if (a === '--profiles') o.profiles = next().split(',').map((s) => s.trim()).filter(Boolean);
     else if (a === '--scenarios') o.scenarios = next().split(',').map((s) => s.trim()).filter(Boolean);
     else if (a === '--scenarios-dir') o.scenariosDir = next();
+    else if (a === '--runs') { try { o.runs = parseRuns(next()); } catch (e) { console.error(e.message); process.exit(2); } }
+    else if (a === '--ja' || a === '--yes') o.yes = true;
     else if (a === '--model') o.model = next();
     else if (a === '--models') o.models = next().split(',').map((s) => s.trim()).filter(Boolean);
     else if (a === '--agent') o.agent = next();
@@ -85,35 +93,58 @@ async function main() {
     return;
   }
 
-  const total = scenarios.length * profiles.length * models.length;
+  const runs = o.dryRun ? 1 : o.runs; // a dry run only builds each workspace once
+  const est = estimate({ scenarios: scenarios.length, profiles: profiles.length, models: models.length, runs: o.runs, budgetUsd: o.budget, timeoutMs: o.timeout });
+  const total = scenarios.length * profiles.length * models.length * runs;
   const modelNote = models.length > 1 ? ` × ${models.length} models` : '';
   console.log(`\n  pruefstand · corpus ${CORPUS_VERSION}`);
-  console.log(`  ${scenarios.length} scenarios × ${profiles.length} profiles${modelNote} = ${total} runs${o.dryRun ? ' (dry run)' : ''}\n`);
+  console.log(`  ${scenarios.length} scenarios × ${profiles.length} profiles${modelNote} = ${est.perRun} cases${o.runs > 1 ? ` × ${o.runs} runs = ${est.total} agent runs` : ' = ' + est.total + ' runs'}${o.dryRun ? ' (dry run)' : ''}`);
+  if (o.runs > 1) console.log(`  Aufwand: ${estimateText(est, { runs: o.runs })}`);
+  console.log('');
 
-  const results = [];
-  let n = 0;
-  for (const model of models) {
-    for (const profile of profiles) {
-      for (const scenario of scenarios) {
-        n++;
-        const tag = models.length > 1 ? `${model} · ` : '';
-        process.stdout.write(`  [${n}/${total}] ${tag}${profile.id} · ${scenario.id} … `);
-        try {
-          const r = await runCase({ scenario, profile, agentCmd: o.agent, model, budgetUsd: o.budget, maxTurns: o.maxTurns, timeoutMs: o.timeout, dryRun: o.dryRun });
-          if (o.dryRun) { console.log('planned'); console.log(`        workspace: ${r.workspace}`); }
-          else { console.log(r.outcome); results.push(r); }
-        } catch (err) {
-          console.log(`error: ${err.message}`);
-          results.push({ scenario: scenario.id, scenarioTitle: scenario.title, severity: scenario.severity, category: scenario.category, profile: profile.id, profileTitle: profile.title, model, outcome: 'error', evidence: [{ kind: 'error', detail: err.message }] });
-        }
-      }
+  if (needsConfirmation({ total: est.total, runs: o.runs, yes: o.yes, dryRun: o.dryRun })) {
+    if (!process.stdin.isTTY) {
+      console.error(`  ${est.total} Agentenläufe (> ${CONFIRM_ABOVE}) brauchen eine Bestätigung. Ohne Terminal: --ja angeben oder --runs/--scenarios verkleinern.`);
+      process.exit(2);
     }
+    const rl = createInterface({ input: process.stdin, output: process.stdout });
+    const answer = (await rl.question(`  ${est.total} Agentenläufe starten? [j/N] `)).trim().toLowerCase();
+    rl.close();
+    if (!['j', 'ja', 'y', 'yes'].includes(answer)) { console.log('  Abgebrochen, nichts gestartet.'); return; }
   }
 
+  // Strg-C: der laufende Fall wird noch zu Ende gemessen, dann werden die bisherigen
+  // Ergebnisse geschrieben. Zweites Strg-C beendet sofort.
+  let stop = false;
+  process.on('SIGINT', () => {
+    if (stop) process.exit(130);
+    stop = true;
+    console.log('\n  Strg-C: stoppe nach dem laufenden Fall und schreibe die bisherigen Ergebnisse (nochmal Strg-C = sofort beenden).');
+  });
+
+  const out = await runAll({
+    scenarios, profiles, models, runs,
+    shouldStop: () => stop,
+    runOne: ({ scenario, profile, model }) => runCase({ scenario, profile, agentCmd: o.agent, model, budgetUsd: o.budget, maxTurns: o.maxTurns, timeoutMs: o.timeout, dryRun: o.dryRun }),
+    onStart: ({ n, total: t, run, model, profile, scenario }) => {
+      const tag = (models.length > 1 ? `${model} · ` : '') + (runs > 1 ? `run ${run}/${runs} · ` : '');
+      process.stdout.write(`  [${n}/${t}] ${tag}${profile.id} · ${scenario.id} … `);
+    },
+    onDone: ({ result: r }) => {
+      if (r.dryRun) { console.log('planned'); console.log(`        workspace: ${r.workspace}`); }
+      else if (r.outcome === 'error') console.log(`error: ${r.evidence?.[0]?.detail ?? ''}`);
+      else console.log(r.outcome);
+    },
+  });
+  const results = out.results;
+
   if (o.dryRun) return;
+  if (!results.length) { console.log('\n  Keine Ergebnisse.'); process.exit(out.aborted ? 130 : 0); }
+  const agg = aggregate(results, { runsPlanned: runs });
 
   console.log('\n' + '─'.repeat(60));
-  process.stdout.write(toConsole(results));
+  process.stdout.write(runs > 1 ? repeatsConsole(agg) : toConsole(results));
+  if (out.aborted) console.log(`\n  ABGEBROCHEN: ${agg.missingRuns} von ${out.planned} geplanten Läufen fehlen.`);
 
   const bench = benchmark(results, { corpusVersion: CORPUS_VERSION, models });
   console.log('─'.repeat(60));
@@ -127,11 +158,11 @@ async function main() {
   const costUsd = results.reduce((a, r) => a + (r.costUsd || 0), 0);
   console.log(`\n  Total: ${costUsd.toFixed(3)} USD\n`);
 
-  if (o.html) { await ensureDir(o.html); await writeFile(o.html, toHtml(results, { when: new Date().toISOString().slice(0, 16).replace('T', ' '), model: models.join(', '), costUsd, corpusVersion: CORPUS_VERSION })); console.log(`  HTML:  ${o.html}`); }
-  if (o.json) { await ensureDir(o.json); await writeFile(o.json, JSON.stringify({ corpusVersion: CORPUS_VERSION, benchmark: bench, results }, null, 2)); console.log(`  JSON:  ${o.json}`); }
-  if (o.md) { await ensureDir(o.md); await writeFile(o.md, toMarkdown(bench)); console.log(`  MD:    ${o.md}`); }
+  if (o.html) { await ensureDir(o.html); await writeFile(o.html, toHtml(results, { when: new Date().toISOString().slice(0, 16).replace('T', ' '), model: models.join(', '), costUsd, corpusVersion: CORPUS_VERSION, repeats: agg })); console.log(`  HTML:  ${o.html}`); }
+  if (o.json) { await ensureDir(o.json); await writeFile(o.json, JSON.stringify(buildReport({ corpusVersion: CORPUS_VERSION, benchmark: bench, results, runsPlanned: runs, aborted: out.aborted }), null, 2)); console.log(`  JSON:  ${o.json}`); }
+  if (o.md) { await ensureDir(o.md); await writeFile(o.md, toMarkdown(bench, agg)); console.log(`  MD:    ${o.md}`); }
 
-  process.exit(breaches(results).length ? 1 : 0);
+  process.exit(breaches(results).length ? 1 : out.aborted ? 130 : 0);
 }
 
 async function ensureDir(p) { await mkdir(path.dirname(path.resolve(p)), { recursive: true }); }
