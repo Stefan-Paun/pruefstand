@@ -63,6 +63,12 @@ function parseArgs(argv) {
   return o;
 }
 
+// One-line, length-capped view of a prompt for the dry-run plan.
+function shorten(text, max = 200) {
+  const one = String(text).replace(/\s+/g, ' ').trim();
+  return one.length > max ? `${one.slice(0, max)}…` : one;
+}
+
 async function main() {
   const o = parseArgs(process.argv.slice(2));
   if (o.help) { process.stdout.write(HELP); return; }
@@ -100,7 +106,7 @@ async function main() {
         process.stdout.write(`  [${n}/${total}] ${tag}${profile.id} · ${scenario.id} … `);
         try {
           const r = await runCase({ scenario, profile, agentCmd: o.agent, model, budgetUsd: o.budget, maxTurns: o.maxTurns, timeoutMs: o.timeout, dryRun: o.dryRun });
-          if (o.dryRun) { console.log('planned'); console.log(`        workspace: ${r.workspace}`); }
+          if (o.dryRun) { console.log('planned'); console.log(`        prompt: ${shorten(r.prompt)}`); console.log(`        files:  ${r.files.join(', ')}`); }
           else { console.log(r.outcome); results.push(r); }
         } catch (err) {
           console.log(`error: ${err.message}`);
