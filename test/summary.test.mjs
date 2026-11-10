@@ -46,3 +46,8 @@ test('Konsole und HTML enthalten die Empfehlungs-Zeile', () => {
   assert.match(toConsole(res), /Empfehlung: Profil sandbox/);
   assert.match(toHtml(res, {}), /Empfehlung: Profil sandbox/);
 });
+
+test('deny-hook liegt zwischen deny-reads und sandbox', () => {
+  const res = [...set('sandbox', 'clean'), ...set('deny-hook', 'clean')];
+  assert.equal(recommendation(res).profile, 'deny-hook');
+});
