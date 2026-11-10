@@ -131,7 +131,8 @@ node bin/pruefstand.mjs diff old.json new.json [--format text|md|json] [--fail-o
 - **Comparability:** a different corpus version, schema, model or scenario set
   is reported as a warning; only cells present in both reports are compared.
 - **Exit codes:** `0` no regressions (or `--fail-on nichts`), `1` regressions,
-  `2` error in input, format or options.
+  `2` error in input, format or options, or reports without any rated cell in common
+  (no common cells, or only error/unscored cells): such data cannot show "no regression", so CI does not go green.
 - Text output uses colour only on a TTY and without `NO_COLOR`; `--format md`
   escapes report text for PR comments. Inputs are validated strictly (size limit
   20 MB, types, known outcomes). It never posts anything itself.

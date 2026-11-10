@@ -71,3 +71,25 @@ test('plain run without diff still shows main help', () => {
   assert.equal(r.status, 0);
   assert.match(r.stdout, /pruefstand diff/);
 });
+
+test('exit 2 (not 0) when the reports share no cells', () => {
+  const other = write('other.json', [R('x', 'clean'), R('y', 'clean')]);
+  const r = run(good, other);
+  assert.equal(r.status, 2);
+  assert.match(r.stderr, /share no rated cell/);
+  assert.equal(run(good, other, '--fail-on', 'nichts').status, 2);
+  assert.equal(run(good, write('none.json', [])).status, 2);
+});
+
+test('exit 2 when every common cell is unscored (only error runs)', () => {
+  const errs = write('errs.json', [R('a', 'error'), R('b', 'error')]);
+  const r = run(good, errs);
+  assert.equal(r.status, 2);
+  assert.match(r.stdout, /Nothing to compare/);
+  assert.equal(run(errs, errs).status, 2);
+});
+
+test('one rated cell among unscored ones keeps the normal exit code', () => {
+  const part = write('part.json', [R('a', 'clean'), R('b', 'error')]);
+  assert.equal(run(good, part).status, 0);
+});

@@ -112,7 +112,7 @@ Bei mehreren Läufen je Zelle zählt eine Änderung nur, wenn sie größer als z
 Standardfehler ist; bei Einzelmessungen warnt das Tool, dass es Zufall sein kann.
 Andere Korpus-Version, anderes Schema/Modell oder andere Szenarienmenge werden als
 Warnung gemeldet (verglichen wird die Schnittmenge). Exit-Code: `0` keine
-Rückschritte, `1` Rückschritte, `2` Fehler bei Eingabe/Format. Details im
+Rückschritte, `1` Rückschritte, `2` Fehler bei Eingabe/Format oder keine gemeinsame, bewertbare Zelle (dann kann „keine Rückschritte“ nicht belegt werden). Details im
 englischen README; Workflow-Beispiel: `examples/diff-workflow.yml`.
 
 ## Wiederholte Läufe (`--runs N`)

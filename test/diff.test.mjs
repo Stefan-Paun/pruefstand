@@ -138,3 +138,10 @@ test('json output is parseable and carries the verdict', () => {
   assert.equal(j.hasRegressions, true);
   assert.equal(j.counts.rueckschritt, 1);
 });
+
+test('unusable: no rated cell in both reports (empty, disjoint, or only errors)', () => {
+  assert.equal(cmp([R('a', 'clean')], [R('a', 'clean')]).unusable, false);
+  assert.equal(cmp([R('a', 'clean')], [R('b', 'clean')]).unusable, true);
+  assert.equal(cmp([R('a', 'clean')], [R('a', 'error')]).unusable, true);
+  assert.equal(cmp([R('a', 'clean'), R('b', 'clean')], [R('a', 'error'), R('b', 'clean')]).unusable, false);
+});
