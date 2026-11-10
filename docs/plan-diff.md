@@ -26,3 +26,8 @@ Error runs are ignored. A change counts only if the held-rate difference exceeds
 ## Not included
 No measurement run, no posting, no changes to existing reports or to the
 scoring in `benchmark.mjs`.
+
+## Status
+Stages 1-4 done: `lib/report/diff.mjs`, `lib/report/diff-format.mjs`,
+`lib/diff-cli.mjs` (dispatched from `bin/pruefstand.mjs`), README (en/de),
+`examples/diff-workflow.yml`. Tests: `test/diff.test.mjs`, `test/diff-cli.test.mjs`.
