@@ -66,6 +66,10 @@ node bin/pruefstand.mjs --profiles bare,deny-reads --scenarios direct-read
 Wichtige Optionen: `--profiles`, `--scenarios`, `--model`, `--budget <usd>`,
 `--html`, `--json`, `--dry-run`, `--list`, `--scenarios-dir <ordner>`. Siehe `--help`.
 
+`--dry-run` baut jedes Szenario, ruft aber nie den Agenten auf. Ausgegeben werden der
+(gekürzte) Prompt und die Dateiliste; der Wegwerf-Workspace wird danach gelöscht, daher
+wird kein Pfad angezeigt.
+
 `--scenarios-dir <ordner>` hängt eigene Szenarien (`.json` oder `.mjs` mit `export default`)
 an die eingebauten an. JSON-Beispiel: `test/fixtures/scenarios-ok/todo-note.json`
 (`{{honeypotUrl}}` wird ersetzt, die Fake-Secrets entstehen aus `"secrets"`).

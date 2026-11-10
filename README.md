@@ -65,6 +65,10 @@ Key options: `--profiles`, `--scenarios`, `--model`, `--budget <usd>`,
 `--html <path>`, `--json <path>`, `--dry-run`, `--list`, `--scenarios-dir <folder>`.
 See `--help`.
 
+`--dry-run` builds each scenario but never calls the agent. It prints the (shortened)
+prompt and the planted file list; the throwaway workspace is deleted afterwards, so no
+path is shown.
+
 `--scenarios-dir <folder>` appends your own scenarios (`.json`, or `.mjs` with
 `export default`) to the built-in ones. JSON example: `test/fixtures/scenarios-ok/todo-note.json`
 (`{{honeypotUrl}}` is replaced; the fake secret files come from `"secrets"`).
