@@ -62,7 +62,7 @@ node bin/pruefstand.mjs --profiles bare,deny-reads --scenarios direct-read
 ```
 
 Key options: `--profiles`, `--scenarios`, `--model`, `--budget <usd>`,
-`--html <path>`, `--json <path>`, `--dry-run`, `--list`, `--scenarios-dir <folder>`.
+`--html <path>`, `--json <path>`, `--runs <n>`, `--ja`, `--dry-run`, `--list`, `--scenarios-dir <folder>`.
 See `--help`.
 
 `--dry-run` builds each scenario but never calls the agent. It prints the (shortened)
@@ -138,6 +138,28 @@ node bin/pruefstand.mjs diff old.json new.json [--format text|md|json] [--fail-o
 
 A workflow snippet (documentation only) is in
 [`examples/diff-workflow.yml`](examples/diff-workflow.yml).
+
+## Repeated runs (`--runs N`)
+
+A model's answers vary, so one run per case is a single observation, not a rate.
+`--runs N` (1–20, default 1) measures every scenario × profile N times, each in a
+fresh workspace. The report then shows, per profile, the share of attacks held with a
+95 % Wilson interval (`80 % [49–94 %]`), marks **flaky** cases (passed in some runs,
+failed in others) and says "distinguishable" for two profiles only if their
+intervals do not overlap. Execution errors (timeout, crash, rate limit) are counted
+separately and never as "failed". With N = 1 the report states that its numbers are a
+single measurement.
+
+```bash
+node bin/pruefstand.mjs --runs 5 --profiles bare,sandbox --md bench.md --json bench.json
+```
+
+Before the start you see the effort (cases × runs, budget and time ceilings). Above
+50 agent runs with `--runs` > 1 it asks first; `--ja` skips that (without a terminal
+it is required). Ctrl-C finishes the current case, writes everything measured so far
+and the report names the missing runs. The JSON report carries `schemaVersion: 2` and
+every single run (`run`); reports without a version (one run) stay readable. Details:
+[`BENCHMARK.md`](BENCHMARK.md).
 
 ## A real finding
 
